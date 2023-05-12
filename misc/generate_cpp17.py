@@ -137,11 +137,7 @@ print(PROLOGUE)
 funcs_count = 100 if len(sys.argv) == 1 else int(sys.argv[1])
 max_args_on_a_line = len(ascii_letters)
 for i in range(1, funcs_count):
-    if i % max_args_on_a_line == 0:
-        indexes += ",\n    "
-    else:
-        indexes += ","
-
+    indexes += ",\n    " if i % max_args_on_a_line == 0 else ","
     if i >= max_args_on_a_line:
         indexes += ascii_letters[i // max_args_on_a_line - 1]
     indexes += ascii_letters[i % max_args_on_a_line]
@@ -151,21 +147,28 @@ for i in range(1, funcs_count):
     empty_printer = EmptyLinePrinter()
 
     print("template <class T>")
-    print("constexpr auto tie_as_tuple(T& val, size_t_<" + str(i + 1) + ">) noexcept {")
+    print(
+        f"constexpr auto tie_as_tuple(T& val, size_t_<{str(i + 1)}"
+        + ">) noexcept {"
+    )
     if i < max_args_on_a_line:
-        print("  auto& [" + indexes.strip() + "] = const_cast<std::remove_cv_t<T>&>(val); // ====================> Boost.PFR: User-provided type is not a SimpleAggregate.")
+        print(
+            f"  auto& [{indexes.strip()}] = const_cast<std::remove_cv_t<T>&>(val); // ====================> Boost.PFR: User-provided type is not a SimpleAggregate."
+        )
     else:
         print("  auto& [")
         print(indexes)
         print("  ] = const_cast<std::remove_cv_t<T>&>(val); // ====================> Boost.PFR: User-provided type is not a SimpleAggregate.")
         empty_printer.print_once()
- 
+
     if indexes_count < WORKAROUND_CAST_EXPRESSIONS_LIMIT_PER_LINE:
-        print("  return ::boost::pfr::detail::make_tuple_of_references(" + printed_casts + ");")
+        print(
+            f"  return ::boost::pfr::detail::make_tuple_of_references({printed_casts});"
+        )
     else:
         empty_printer.print_once()
         print("  return ::boost::pfr::detail::make_tuple_of_references(")
-        print("    " + printed_casts)
+        print(f"    {printed_casts}")
         print("  );")
 
     print("}\n")
